@@ -116,6 +116,10 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
+var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<ApplicationDbContext>();
+SeedData.EnsurePopulated(context);
+IdentitySeedData.EnsurePopulated(app.Services, app.Configuration);
+
 // define a local API for testing
 app.MapGet("localapi/bands", () =>
 {
