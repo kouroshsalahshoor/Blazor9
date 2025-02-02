@@ -7,6 +7,7 @@
 
 <button class="btn btn-primary" @onclick="CallLocalAPIAsync">Call local API</button>
 <button class="btn btn-primary" @onclick="CallRemoteAPIAsync">Call remote API</button>
+<button class="btn btn-primary" @onclick="loadUser">Load User</button>
 
 @if (bands == null)
 {
@@ -33,11 +34,13 @@ else
     </table>
 }
 
-@code {
+<p>@_authMessage</p>
 
-    [Inject]
-    private IApiService _apiService { get; set; } = default!;
+@code {
+    [Inject] private AuthenticationStateProvider _authenticationStateProvider { get; set; } = default!;
+    [Inject] private IApiService _apiService { get; set; } = default!;
     private List<Band>? bands;
+    private string? _authMessage;
 
     private async Task CallLocalAPIAsync()
     {
@@ -50,5 +53,19 @@ else
     {
         bands = (await _apiService.CallRemoteApiAsync())
             .ToList();
+    }
+
+    private async Task loadUser()
+    {
+        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            _authMessage = $"Hello, {user.Identity.Name}!";
+        }
+        else
+        {
+            _authMessage = "You are not authenticated.";
+        }
     }
 }
