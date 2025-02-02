@@ -1,4 +1,5 @@
 using Blazor9.Auto.Client.Services;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -25,5 +26,7 @@ builder.Services.AddKeyedScoped<HttpClient>("RemoteAPIClientFromWASM",
            BaseAddress = new Uri(builder.Configuration["RemoteAPIBaseAddress"] ??
                 throw new Exception("RemoteAPIBaseAddress is missing."))
        });
+
+builder.Services.AddSingleton<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
 
 await builder.Build().RunAsync();
