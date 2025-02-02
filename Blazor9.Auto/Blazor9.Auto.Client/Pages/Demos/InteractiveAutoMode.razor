@@ -37,7 +37,9 @@ else
 <p>@_authMessage</p>
 
 @code {
-    [Inject] private AuthenticationStateProvider _authenticationStateProvider { get; set; } = default!;
+    [CascadingParameter] private Task<AuthenticationState> _authenticationStateTask { get; set; } = default!;
+    // [Inject] private AuthenticationStateProvider _authenticationStateProvider { get; set; } = default!;
+
     [Inject] private IApiService _apiService { get; set; } = default!;
     private List<Band>? bands;
     private string? _authMessage;
@@ -54,8 +56,9 @@ else
 
     private async Task loadUser()
     {
-        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        var user = (await _authenticationStateTask).User;
+        // var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        // var user = authState.User;
         if (user.Identity?.IsAuthenticated ?? false)
         {
             _authMessage = $"Hello, {user.Identity.Name}!";
