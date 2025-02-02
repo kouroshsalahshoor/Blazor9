@@ -1,0 +1,94 @@
+﻿@page "/person/edit/{id:long}"
+@page "/person/create"
+
+@rendermode InteractiveServer
+
+<h4 class="bg-@Theme text-center text-white p-2">@Mode</h4>
+
+<EditForm Model="@_model" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    @if (Mode == "Edit")
+    {
+        <div class="form-group">
+            <label>ID</label>
+            <InputNumber class="form-control"
+                         @bind-Value="_model.PersonId" readonly />
+        </div>
+    }
+    <div class="form-group">
+        <label>Firstname</label>
+        <ValidationMessage For="@(() => _model.Firstname)" />
+        <InputText class="form-control" @bind-Value="_model.Firstname" />
+    </div>
+    <div class="form-group">
+        <label>Surname</label>
+        <ValidationMessage For="@(() => _model.Surname)" />
+        <InputText class="form-control" @bind-Value="_model.Surname" />
+    </div>
+    <div class="form-group">
+        <label>Deptartment</label>
+        <ValidationMessage For="@(() => _model.DepartmentId)" />
+        <InputSelect class="form-control" @bind-Value="_model.DepartmentId">
+            <option selected disabled value="0">Please Choose a Department</option>
+            @foreach (var d in Departments)
+            {
+                <option value="@d.Value">@d.Key</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Location</label>
+        <ValidationMessage For="@(() => _model.LocationId)" />
+        <InputSelect class="form-control" @bind-Value="_model.LocationId">
+            <option selected disabled value="0">Please Choose a Location</option>
+            @foreach (var l in Locations)
+            {
+                <option value="@l.Value">@l.Key</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="text-center">
+        <button type="submit" class="btn btn-@Theme mt-2">Save</button>
+        <NavLink class="btn btn-light mt-2" href="/people">Back</NavLink>
+    </div>
+</EditForm>
+@code {
+    private ApplicationDbContext? Context => Service;
+
+    [Parameter]
+    public long Id { get; set; }
+
+    public Person _model { get; set; } = new();
+    public IDictionary<string, long> Departments { get; set; }
+    = new Dictionary<string, long>();
+    public IDictionary<string, long> Locations { get; set; }
+    = new Dictionary<string, long>();
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Context != null)
+        {
+            if (Mode == "Edit")
+            {
+                _model = await Context.People.FindAsync(Id) ?? new Person();
+            }
+            Departments = await Context.Departments
+            .ToDictionaryAsync(d => d.Name, d => d.Departmentid);
+            Locations = await Context.Locations
+            .ToDictionaryAsync(l => $"{l.City}, {l.State}", l => l.LocationId);
+        }
+    }
+    public string Theme => Id == 0 ? "primary" : "warning";
+    public string Mode => Id == 0 ? "Create" : "Edit";
+    public async Task HandleValidSubmit()
+    {
+        if (Context != null)
+        {
+            if (Mode == "Create")
+            {
+                Context.Add(_model);
+            }
+            await Context.SaveChangesAsync();
+            _navigationManager?.NavigateTo("/people");
+        }
+    }
+}

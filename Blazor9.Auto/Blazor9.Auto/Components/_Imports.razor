@@ -10,3 +10,15 @@
 @using Blazor9.Auto
 @using Blazor9.Auto.Client
 @using Blazor9.Auto.Components
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+
+@using Blazor9.Auto.Client.Models
+@using Blazor9.Auto.Client.Services
+@using Blazor9.Auto.Data
+
+@inherits OwningComponentBase<ApplicationDbContext>
+
+@inject IJSRuntime _js
+@inject NavigationManager _navigationManager

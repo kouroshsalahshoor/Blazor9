@@ -1,0 +1,87 @@
+﻿@page "/people"
+@rendermode InteractiveServer
+
+<PageTitle>@_title</PageTitle>
+
+<h5 class="bg-primary text-white text-center p-2">@_title</h5>
+<table class="table table-sm table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Dept</th>
+            <th>Location</th>
+            <th class="text-center">
+                <NavLink class="btn btn-primary btn-sm" href="/person/create">Create</NavLink>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (_items.Count() == 0)
+        {
+            <tr><th colspan="5" class="p-4 text-center">Loading Data...</th></tr>
+        }
+        else
+        {
+            @foreach (Person p in _items)
+            {
+                <tr>
+                    <td>@p.PersonId</td>
+                    <td>@p.Surname, @p.Firstname</td>
+                    <td>@p.Department?.Name</td>
+                    <td>@p.Location?.City</td>
+                    <td class="text-center">
+                        <NavLink class="btn btn-sm btn-info"
+                                 href="@GetDetailsUrl(p.PersonId)">
+                            Details
+                        </NavLink>
+                        <NavLink class="btn btn-sm btn-warning"
+                                 href="@GetEditUrl(p.PersonId)">
+                            Edit
+                        </NavLink>
+                        <button class="btn btn-sm btn-danger"
+                                @onclick="@(() => HandleDelete(p))">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private ApplicationDbContext? _db => Service;
+
+    private string _title = "People";
+    private IEnumerable<Person> _items { get; set; } = Enumerable.Empty<Person>();
+
+    protected async override Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+    private IQueryable<Person> Query => _db!.People.Include(p => p.Department).Include(p => p.Location);
+    private async Task UpdateData(IQueryable<Person>? query = null) => _items = await (query ?? Query).ToListAsync<Person>();
+    private async Task SortWithQuery()
+    {
+        await UpdateData(Query.OrderBy(p => p.Surname));
+    }
+    private void SortWithoutQuery()
+    {
+        _items = _items.OrderBy(p => p.Firstname).ToList<Person>();
+    }
+    string GetEditUrl(long id) => $"/person/edit/{id}";
+    string GetDetailsUrl(long id) => $"/person/{id}";
+    private async Task HandleDelete(Person p)
+    {
+        if (await _js.InvokeAsync<bool>("confirm", "Are you sure deleting this item?"))
+        {
+            if (_db != null)
+            {
+                _db.Remove(p);
+                await _db.SaveChangesAsync();
+                await UpdateData();
+            }
+        }
+    }
+}

@@ -1,0 +1,46 @@
+﻿@page "/person/{id:long}"
+<h4 class="bg-info text-center text-white p-2">Details</h4>
+<div class="form-group">
+    <label>ID</label>
+    <input class="form-control" value="@_model.PersonId" disabled />
+</div>
+<div class="form-group">
+    <label>Firstname</label>
+    <input class="form-control" value="@_model.Firstname" disabled />
+</div>
+<div class="form-group">
+    <label>Surname</label>
+    <input class="form-control" value="@_model.Surname" disabled />
+</div>
+<div class="form-group">
+    <label>Department</label>
+    <input class="form-control" value="@_model.Department?.Name" disabled />
+</div>
+<div class="form-group">
+    <label>Location</label>
+    <input class="form-control"
+           value="@($"{_model.Location?.City}, {_model.Location?.State}")"
+           disabled />
+</div>
+<div class="text-center p-2">
+    <NavLink class="btn btn-info" href="@EditUrl">Edit</NavLink>
+    <NavLink class="btn btn-light" href="/people">Back</NavLink>
+</div>
+@code {
+    ApplicationDbContext _db => Service;
+
+    [Parameter]
+    public long Id { get; set; }
+    
+    public Person _model { get; set; } = new();
+    protected async override Task OnParametersSetAsync()
+    {
+        if (_db != null)
+        {
+            _model = await _db.People.Include(p => p.Department)
+            .Include(p => p.Location).FirstOrDefaultAsync(p => p.PersonId == Id)
+            ?? new();
+        }
+    }
+    public string EditUrl => $"/person/edit/{Id}";
+}
